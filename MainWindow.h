@@ -55,6 +55,7 @@ private:
     cv::Mat mu, mu2, sigma;
     cv::Mat image32f;
     cv::Mat bandage;
+    int limitBandageDetection = 0;
 
 };
 

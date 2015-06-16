@@ -123,9 +123,9 @@ void MainWindow::onImageArrival(const cv::Mat &image)
 
     tbb::flow::function_node<bool, bool> detectBandageColor(g, 1, [this](const bool x){
         cv::Mat out;
-        cv::Mat rangeBlueMinGreen = ((blue - green) < 15) & ((blue - green) > -15) & (green>50);
-        cv::Mat rangeMinBlue = (blue>50);
-        cv::Mat rangeRedMinBlueAndGreen = ((red-blue)<100)&((red- green)<100);
+        cv::Mat rangeBlueMinGreen = ((blue - green) < 15) & ((blue - green) > -15) & (green > 50);
+        cv::Mat rangeMinBlue = (blue > 50);
+        cv::Mat rangeRedMinBlueAndGreen = ((red-blue) < 100)&((red- green) < 100);
 
         out = rangeBlueMinGreen & rangeMinBlue & rangeRedMinBlueAndGreen;
 
@@ -196,31 +196,22 @@ void MainWindow::onImageArrival(const cv::Mat &image)
 
         });
 
-    tbb::flow::join_node<joinForDisplay> displayJoin(g);
-
-
-    tbb::flow::function_node<joinForDisplay, bool> display(g, 1, [this](const joinForDisplay x){
-            ui->lblStream->setPixmap(MatToQPixMap(frame));
-            ui->lblDetectionBlood->setPixmap(MatToQPixMap(blood));
-
-            return true;
-        });
-
     tbb::flow::make_edge(broadcast, splitColorChannels);
     tbb::flow::make_edge(splitColorChannels, detectBlood);
-    tbb::flow::make_edge(splitColorChannels, calcMu);
-    tbb::flow::make_edge(splitColorChannels, calcMu2);
-    tbb::flow::make_edge(splitColorChannels, detectBandageColor);
-    tbb::flow::make_edge(calcMu, tbb::flow::get<0>(sigmaJoin.input_ports()));
-    tbb::flow::make_edge(calcMu2, tbb::flow::get<1>(sigmaJoin.input_ports()));
-    tbb::flow::make_edge(detectBandageColor, tbb::flow::get<2>(sigmaJoin.input_ports()));
-    tbb::flow::make_edge(sigmaJoin, calcSigma);
 
-//    tbb::flow::make_edge(detectBlood, tbb::flow::get<0>(displayJoin.input_ports()));
-//    tbb::flow::make_edge(calcSigma, tbb::flow::get<1>(displayJoin.input_ports()));
+    if(limitBandageDetection > 5){
 
-//    tbb::flow::make_edge(displayJoin, display);
+        tbb::flow::make_edge(splitColorChannels, calcMu);
+        tbb::flow::make_edge(splitColorChannels, calcMu2);
+        tbb::flow::make_edge(splitColorChannels, detectBandageColor);
+        tbb::flow::make_edge(calcMu, tbb::flow::get<0>(sigmaJoin.input_ports()));
+        tbb::flow::make_edge(calcMu2, tbb::flow::get<1>(sigmaJoin.input_ports()));
+        tbb::flow::make_edge(detectBandageColor, tbb::flow::get<2>(sigmaJoin.input_ports()));
+        tbb::flow::make_edge(sigmaJoin, calcSigma);
 
+        limitBandageDetection = 0;
+    }
+    limitBandageDetection++;
     broadcast.try_put(true);
     g.wait_for_all();
 
