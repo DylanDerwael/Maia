@@ -76,6 +76,7 @@ void MainWindow::onImageArrival(const cv::Mat &image)
 
     frame = image;
 
+    ui->lblStream->setPixmap(MatToQPixMap(image));
 /////Bool switch
 
     tbb::flow::graph g;
@@ -84,6 +85,7 @@ void MainWindow::onImageArrival(const cv::Mat &image)
 
 
     tbb::flow::function_node<bool, bool> splitColorChannels (g, 1, [this]( const bool x) {
+
             cv::split(frame,channel);
             red = channel[2];
             green = channel[1];
@@ -96,6 +98,7 @@ void MainWindow::onImageArrival(const cv::Mat &image)
         });
 
     tbb::flow::function_node<bool, bool> detectBlood(g, 1, [this](const bool x){
+
             cv::Mat out;
             cv::Mat redRange = (red > redLowerBound) & (red < redUpperBound);
             cv::Mat greenRange = (green < greenUpperBound);
@@ -111,6 +114,9 @@ void MainWindow::onImageArrival(const cv::Mat &image)
             // Filter out noise
             cv::erode(out,out,cv::Mat());
             cv::erode(out,blood,cv::Mat());
+
+
+            ui->lblDetectionBlood->setPixmap(MatToQPixMap(blood));
 
             return x;
         });
@@ -181,6 +187,7 @@ void MainWindow::onImageArrival(const cv::Mat &image)
 
                         drawContours( frame, contours, largest_contour_index, Scalar(255), CV_FILLED, 8, hierarchy ); // Draw the largest contour using previously stored index.
 
+                        ui->lblDetectionBandage->setPixmap(MatToQPixMap(frame));
 
                 return true;
             } else {
@@ -209,10 +216,10 @@ void MainWindow::onImageArrival(const cv::Mat &image)
     tbb::flow::make_edge(detectBandageColor, tbb::flow::get<2>(sigmaJoin.input_ports()));
     tbb::flow::make_edge(sigmaJoin, calcSigma);
 
-    tbb::flow::make_edge(detectBlood, tbb::flow::get<0>(displayJoin.input_ports()));
-    tbb::flow::make_edge(calcSigma, tbb::flow::get<1>(displayJoin.input_ports()));
+//    tbb::flow::make_edge(detectBlood, tbb::flow::get<0>(displayJoin.input_ports()));
+//    tbb::flow::make_edge(calcSigma, tbb::flow::get<1>(displayJoin.input_ports()));
 
-    tbb::flow::make_edge(displayJoin, display);
+//    tbb::flow::make_edge(displayJoin, display);
 
     broadcast.try_put(true);
     g.wait_for_all();

@@ -49,6 +49,13 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
+        <widget class="QLabel" name="lblDetectionBandage">
+         <property name="text">
+          <string>Blood detection</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QLabel" name="lblDetectionBlood">
          <property name="text">
           <string>Blood detection</string>
