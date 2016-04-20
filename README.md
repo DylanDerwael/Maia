@@ -23,3 +23,8 @@ upon the concept of parallel programming. This will help divide the tasks betwee
 hardware cores of the CPU. Letting the application use all of the hardware resources will increase
 the efficiency, scalability and load-balance capabilities of the application and thus making it future
 proof.
+
+
+All documentation can be found at
+https://www.linkedin.com/in/dylanderwael
+under experience (Erasmus internship)
